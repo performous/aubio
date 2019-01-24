@@ -25,7 +25,7 @@ doc/*.1
 # waf stuff
 .lock-waf*
 .waf-*
-waf
+# waf
 waflib
 build/
 

@@ -19,7 +19,7 @@ from this_version import *
 VERSION = get_aubio_version()
 LIB_VERSION = get_libaubio_version()
 
-top = '.'
+top = ''
 out = 'build'
 
 def add_option_enable_disable(ctx, name, default = None,
