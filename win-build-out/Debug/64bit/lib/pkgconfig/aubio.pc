@@ -1,0 +1,10 @@
+prefix=/mnt/c/Users/aspeiard/Desktop/Persoonlijk/performous-aubio/win-build-out/Release64bit
+exec_prefix=/mnt/c/Users/aspeiard/Desktop/Persoonlijk/performous-aubio/win-build-out/Release64bit
+libdir=/mnt/c/Users/aspeiard/Desktop/Persoonlijk/performous-aubio/win-build-out/Release64bit/lib
+includedir=/mnt/c/Users/aspeiard/Desktop/Persoonlijk/performous-aubio/win-build-out/Release64bit/include
+
+Name: aubio
+Description: a library for audio labelling
+Version: 0.5.0~git+b752131b+mods
+Libs: -L${libdir} -laubio
+Cflags: -I${includedir}
