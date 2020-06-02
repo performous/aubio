@@ -1,17 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(aubio C)
 
-include(CheckIncludeFile)
-
-add_definitions(
-	-DHAVE_STDLIB_H=1
-	-DHAVE_STDIO_H=1
-	-DHAVE_MATH_H=1
-	-DHAVE_STRING_H=1
-	-DHAVE_LIMITS_H=1
-	-DHAVE_STDARG_H=1
-	-DHAVE_C99_VARARGS_MACROS=1
-)
 if (WIN32)
 	if (MSVC)
 		add_definitions(
@@ -24,33 +13,28 @@ if (WIN32)
 endif()
 
 if (APPLE)
-	set_property(GLOBAL PROPERTY BLA_VENDOR Apple)
+	set(BLA_VENDOR Apple)
+	find_package(BLAS REQUIRED MODULE)
 	set(BLAS_FLAG -DHAVE_ACCELERATE=1)
 else()
-	set_property(GLOBAL PROPERTY BLA_VENDOR OpenBLAS)
-	set(BLAS_FLAG -DHAVE_BLAS=1)
+	set(BLA_VENDOR OpenBLAS)
+	find_package(BLAS MODULE)
+	if (BLAS_FOUND)
+		set(BLAS_FLAG -DHAVE_BLAS=1 -DHAVE_OPENBLAS_CBLAS_H=1)
+	else()
+		set(BLA_VENDOR ATLAS)
+		# put as required as it is mandatory to have a blas library and
+		# this is the last chance to get one
+		find_package(BLAS REQUIRED MODULE)
+		if (BLAS_FOUND)
+			set(BLAS_FLAG -DHAVE_BLAS=1 -DHAVE_ATLAS_CBLAS_H=1)
+		endif()
+	endif()
 endif()
 
-find_package(BLAS REQUIRED MODULE)
 find_package(FFTW3 COMPONENTS single REQUIRED MODULE)
 
-if(NOT FFTW3_FOUND OR NOT BLAS_FOUND)
-	message(ERROR "fftw3 and BLAS required to build aubio, but one or both of them cannot be found.")
-else()
-	CHECK_INCLUDE_FILE(openblas/cblas.h OPENBLAS_HEADER QUIET)
-	
-	if (OPENBLAS_HEADER)
-		set(BLAS_FLAG ${BLAS_FLAG} -DHAVE_OPENBLAS_CBLAS_H=1)	
-	else()
-		CHECK_INCLUDE_FILE(cblas.h OPENBLAS_HEADER QUIET)
-		set(BLAS_FLAG ${BLAS_FLAG} -DHAVE_CBLAS_H=1)
-	endif()
-
-	add_definitions(
-		-DHAVE_FFTW3F=1
-		${BLAS_FLAG}
-	)
-endif()
+message("Detected Blas library: " ${BLA_VENDOR})
 
 set(CMAKE_DEBUG_POSTFIX d)
 
@@ -58,7 +42,7 @@ file(GLOB_RECURSE SOURCES src/*.c)
 
 add_library(aubio STATIC)
 
-include_directories(
+target_include_directories(aubio PUBLIC
 	src
 	${FFTW3_INCLUDE_DIR}
 )
@@ -72,20 +56,14 @@ target_link_libraries(aubio PUBLIC
 	${FFTW3F_LIBRARY}
 )
 
-#install(
-#	TARGETS aubio
-#	RUNTIME DESTINATION bin
-#	LIBRARY DESTINATION lib
-#	ARCHIVE DESTINATION lib
-#)
-#
-#if(NOT DISABLE_INSTALL_HEADERS)
-#	install(
-#		DIRECTORY src/
-#		DESTINATION include/aubio
-#		FILES_MATCHING
-#		PATTERN "*.h"
-#		PATTERN "*_priv.h" EXCLUDE
-#		PATTERN "config.h" EXCLUDE
-#	)
-#endif()
+target_compile_definitions(aubio
+     PUBLIC HAVE_FFTW3F=1
+            ${BLAS_FLAG}
+            HAVE_STDLIB_H=1
+            HAVE_STDIO_H=1
+            HAVE_MATH_H=1
+            HAVE_STRING_H=1
+            HAVE_LIMITS_H=1
+            HAVE_STDARG_H=1
+            HAVE_C99_VARARGS_MACROS=1
+)
