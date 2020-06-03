@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 project(aubio C)
+include (CheckIncludeFile)
 
 if (WIN32)
 	if (MSVC)
@@ -20,7 +21,13 @@ else()
 	set(BLA_VENDOR OpenBLAS)
 	find_package(BLAS MODULE)
 	if (BLAS_FOUND)
-		set(BLAS_FLAG -DHAVE_BLAS=1 -DHAVE_OPENBLAS_CBLAS_H=1)
+		CHECK_INCLUDE_FILE(openblas/cblas.h STANDARD_OPENBLAS)
+		CHECK_INCLUDE_FILE(cblas-openblas.h UBUNTU_OPENBLAS)
+		if (UBUNTU_OPENBLAS AND NOT STANDARD_OPENBLAS)
+			set(BLAS_FLAG -DHAVE_BLAS=1 -DHAVE_CBLAS_H=1)
+		else()
+			set(BLAS_FLAG -DHAVE_BLAS=1 -DHAVE_OPENBLAS_CBLAS_H=1)
+		endif()
 	else()
 		set(BLA_VENDOR ATLAS)
 		# put as required as it is mandatory to have a blas library and
@@ -38,17 +45,13 @@ message("Detected Blas library: " ${BLA_VENDOR})
 
 set(CMAKE_DEBUG_POSTFIX d)
 
-file(GLOB_RECURSE SOURCES src/*.c)
+file(GLOB_RECURSE AUBIO_SOURCES src/*.c)
 
-add_library(aubio STATIC)
+add_library(aubio STATIC ${AUBIO_SOURCES})
 
 target_include_directories(aubio PUBLIC
 	src
 	${FFTW3_INCLUDE_DIR}
-)
-
-target_sources(aubio PRIVATE
-	${SOURCES}
 )
 
 target_link_libraries(aubio PUBLIC
