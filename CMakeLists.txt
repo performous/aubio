@@ -59,8 +59,10 @@ target_link_libraries(aubio PUBLIC
 	${FFTW3F_LIBRARY}
 )
 
+# We need both HAVE_FFTW3 and HAVE_FFTW3F; using only the latter does nothing, using only the former is double-precision mode.
 target_compile_definitions(aubio
-     PUBLIC HAVE_FFTW3F=1
+     PUBLIC HAVE_FFTW3=1
+            HAVE_FFTW3F=1
             ${BLAS_FLAG}
             HAVE_STDLIB_H=1
             HAVE_STDIO_H=1
